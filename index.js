@@ -157,9 +157,9 @@ const branchSchema = new mongoose.Schema(
 
     app.get("/master", async (req,res) =>{
         try {
-            const master= await Master.find().populate("userId").lean().exec()
+            const masters= await Master.find().populate("userId").lean().exec()
 
-            return res.status(200).send({master:master});
+            return res.status(200).send({masters:masters});
         } catch (error) {
             return res.status(500).send({error: error});
         }
@@ -172,6 +172,54 @@ const branchSchema = new mongoose.Schema(
             const savings= await Savings.create(req.body);
 
             return res.status(200).send({savings: savings});
+        } catch (error) {
+            return res.status(500).send({error: error});
+        }
+    });
+
+    // updating the balance of master account
+
+    app.patch("/master/:savingId", async (req, res) =>{
+        try {
+             const master = await Master.findByIdAndUpdate(req.params.savingId,req.body)
+             lean().exec()
+
+             return res.status(200).send({master:master});
+        } catch (error) {
+            
+        }
+    })
+
+    // 3. post api to create fixed account
+
+    app.post("/fixed", async (req, res) =>{
+        try {
+            const fixed= await FixedAccount.create(req.body);
+
+            return res.status(201).send({fixed: fixed});
+        } catch (error) {
+            return res.status(500).send({error: error});
+        }
+    });
+
+
+    // 4. getting all the account details of other account 
+    app.get("/master/:id", async (req, res)=>{
+        try {
+            const user= await User.findById(req.params.id)
+            .populate(
+                {
+                    path:"savings",
+                    select:["balance"]
+                }
+             .populate({
+                path:"fixed",
+                select:["balance"],
+             })   
+            ).lean().exec();
+
+            return res.status(200).send({user:user});
+
         } catch (error) {
             return res.status(500).send({error: error});
         }
